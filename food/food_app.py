@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from pathlib import Path
 import pickle
 import matplotlib.pyplot as plt
 import base64
@@ -197,6 +198,7 @@ if st.sidebar.button("Predict Price"):
         st.pyplot(fig)
     else:
         st.warning("No historical data available for trend chart.")
+
 
 
 
