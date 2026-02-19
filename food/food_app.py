@@ -25,7 +25,7 @@ st.markdown(
 
 # Background Image
 # Use Path to find the correct folder
-BASE_DIR = Path(_file_).parent
+BASE_DIR = Path(__file__).parent  # <-- use __file__ with double underscores
 
 # Background Image Function
 def set_bg(image_file):
@@ -61,7 +61,6 @@ def set_bg(image_file):
             unsafe_allow_html=True
         )
     else:
-        # This will tell you exactly where the app is looking if it fails
         st.warning(f"Background image not found at: {image_path}")
 
 # Call the function
@@ -197,5 +196,6 @@ if st.sidebar.button("Predict Price"):
         st.pyplot(fig)
     else:
         st.warning("No historical data available for trend chart.")
+
 
 
