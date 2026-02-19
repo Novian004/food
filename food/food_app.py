@@ -17,66 +17,41 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------------------------------------------
-# TITLE
-# ---------------------------------------------------
-st.markdown(
-    "<h1 style='color: black;'>📊 Tanzania Food Price Prediction System</h1>",
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    "<p style='color:black;font-size:22px; font-weight:bold;'>Select the features on sidebar to predict market food prices.</p>",
-    unsafe_allow_html=True
-)
+st.title("📊 Tanzania Food Price Prediction System")
 
 # ---------------------------------------------------
-# SAFE BACKGROUND FUNCTION
+# DEBUG: SHOW FILES IN DIRECTORY
+# (Helps prevent file not found errors)
 # ---------------------------------------------------
-def set_bg(image_file):
-    if os.path.exists(image_file):
-        with open(image_file, "rb") as f:
-            encoded = base64.b64encode(f.read()).decode()
-
-        st.markdown(
-            f"""
-            <style>
-            .stApp {{
-                background-image: url("data:image/jpg;base64,{encoded}");
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }}
-
-            label, .stMarkdown {{
-                color: black !important;
-                font-weight: 600;
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-    else:
-        st.warning("Background image not found. Running without background.")
-
-set_bg("back.jfif")
+st.sidebar.markdown("### 🔍 Debug Info")
+st.sidebar.write("Files in current directory:")
+st.sidebar.write(os.listdir())
 
 # ---------------------------------------------------
-# LOAD MODEL FILES SAFELY
+# FUNCTION TO LOAD FILE SAFELY
 # ---------------------------------------------------
-try:
-    with open('finalized_model.sav', 'rb') as f:
-        loaded_model = pickle.load(f)
+def load_pickle_file(filename):
+    possible_paths = [
+        filename,
+        f"./{filename}",
+        f"models/{filename}",
+        f"./models/{filename}"
+    ]
 
-    with open('scaler.sav', 'rb') as f:
-        sc = pickle.load(f)
+    for path in possible_paths:
+        if os.path.exists(path):
+            with open(path, "rb") as f:
+                return pickle.load(f)
 
-    with open('model_columns.pkl', 'rb') as f:
-        X_columns = pickle.load(f)
-
-except Exception as e:
-    st.error(f"Error loading model files: {e}")
+    st.error(f"❌ File '{filename}' not found.")
     st.stop()
+
+# ---------------------------------------------------
+# LOAD MODEL FILES (SAFE)
+# ---------------------------------------------------
+loaded_model = load_pickle_file("finalized_model.sav")
+sc = load_pickle_file("scaler.sav")
+X_columns = load_pickle_file("model_columns.pkl")
 
 # ---------------------------------------------------
 # LOAD DATASET SAFELY
@@ -84,7 +59,7 @@ except Exception as e:
 try:
     food = pd.read_csv("Export.csv", on_bad_lines="skip")
 except Exception as e:
-    st.error(f"Error loading CSV file: {e}")
+    st.error(f"❌ Error loading Export.csv: {e}")
     st.stop()
 
 # ---------------------------------------------------
@@ -99,50 +74,32 @@ required_cols = [
 missing_cols = [c for c in required_cols if c not in food.columns]
 
 if missing_cols:
-    st.error(f"Missing columns in CSV: {missing_cols}")
+    st.error(f"❌ Missing columns in CSV: {missing_cols}")
     st.stop()
 
-# Convert date column
 food['date'] = pd.to_datetime(food['date'], errors='coerce')
-
-# ---------------------------------------------------
-# DROPDOWN OPTIONS
-# ---------------------------------------------------
-region_options = sorted(food['admin1'].dropna().unique())
-district_options = sorted(food['admin2'].dropna().unique())
-market_options = sorted(food['market'].dropna().unique())
-category_options = sorted(food['category'].dropna().unique())
-commodity_options = sorted(food['commodity'].dropna().unique())
-unit_options = sorted(food['unit'].dropna().unique())
-priceflag_options = sorted(food['priceflag'].dropna().unique())
-pricetype_options = sorted(food['pricetype'].dropna().unique())
 
 # ---------------------------------------------------
 # SIDEBAR INPUTS
 # ---------------------------------------------------
 st.sidebar.header("Input Market Price Features")
 
-region = st.sidebar.selectbox("Region", region_options)
-district = st.sidebar.selectbox("District", district_options)
-market = st.sidebar.selectbox("Market", market_options)
-category = st.sidebar.selectbox("Category", category_options)
-commodity = st.sidebar.selectbox("Commodity", commodity_options)
-unit = st.sidebar.selectbox("Unit", unit_options)
-priceflag = st.sidebar.selectbox("Price Flag", priceflag_options)
-pricetype = st.sidebar.selectbox("Price Type", pricetype_options)
+region = st.sidebar.selectbox("Region", sorted(food['admin1'].dropna().unique()))
+district = st.sidebar.selectbox("District", sorted(food['admin2'].dropna().unique()))
+market = st.sidebar.selectbox("Market", sorted(food['market'].dropna().unique()))
+category = st.sidebar.selectbox("Category", sorted(food['category'].dropna().unique()))
+commodity = st.sidebar.selectbox("Commodity", sorted(food['commodity'].dropna().unique()))
+unit = st.sidebar.selectbox("Unit", sorted(food['unit'].dropna().unique()))
+priceflag = st.sidebar.selectbox("Price Flag", sorted(food['priceflag'].dropna().unique()))
+pricetype = st.sidebar.selectbox("Price Type", sorted(food['pricetype'].dropna().unique()))
 
-st.sidebar.markdown("### Enter Date")
-col1, col2, col3 = st.sidebar.columns(3)
-
-with col1:
-    year = st.number_input("Year", min_value=2000, max_value=2050, value=2024)
-with col2:
-    month = st.number_input("Month", min_value=1, max_value=12, value=1)
-with col3:
-    day = st.number_input("Day", min_value=1, max_value=31, value=1)
+st.sidebar.markdown("### Select Date")
+year = st.sidebar.number_input("Year", 2000, 2050, 2024)
+month = st.sidebar.number_input("Month", 1, 12, 1)
+day = st.sidebar.number_input("Day", 1, 31, 1)
 
 # ---------------------------------------------------
-# PREDICTION BUTTON
+# PREDICTION
 # ---------------------------------------------------
 if st.sidebar.button("Predict Price"):
 
@@ -150,7 +107,7 @@ if st.sidebar.button("Predict Price"):
         date_input = datetime(int(year), int(month), int(day))
         week = date_input.isocalendar()[1]
     except:
-        st.error("Invalid date entered!")
+        st.error("❌ Invalid date!")
         st.stop()
 
     input_dict = {
@@ -169,32 +126,24 @@ if st.sidebar.button("Predict Price"):
     }
 
     input_df = pd.DataFrame([input_dict])
-
-    # Encode categorical variables
     input_encoded = pd.get_dummies(input_df)
 
-    # Align with training columns
+    # Align columns with training
     input_encoded = input_encoded.reindex(columns=X_columns, fill_value=0)
 
     try:
         input_scaled = sc.transform(input_encoded)
         predicted_price = loaded_model.predict(input_scaled)[0]
     except Exception as e:
-        st.error(f"Prediction error: {e}")
+        st.error(f"❌ Prediction error: {e}")
         st.stop()
 
-    st.markdown(
-        f"<p style='color:black; font-size:22px;font-weight:bold;'>📌 Predicted Market Price: {predicted_price:,.2f} TZS</p>",
-        unsafe_allow_html=True
-    )
+    st.success(f"📌 Predicted Market Price: {predicted_price:,.2f} TZS")
 
     # ---------------------------------------------------
-    # HISTORICAL TREND VISUALIZATION
+    # HISTORICAL TREND
     # ---------------------------------------------------
-    st.markdown(
-        "<h3 style='color:black; font-weight:bold;'>Historical Price Trend</h3>",
-        unsafe_allow_html=True
-    )
+    st.subheader("📈 Historical Price Trend")
 
     history = food[
         (food['commodity'] == commodity) &
@@ -204,16 +153,11 @@ if st.sidebar.button("Predict Price"):
 
     if not history.empty:
 
-        history_sorted = history.sort_values('date')
+        history = history.sort_values('date')
 
         fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(history_sorted['date'],
-                history_sorted['price'],
-                marker='o')
-
-        ax.axhline(predicted_price,
-                   linestyle='--',
-                   label="Predicted Price")
+        ax.plot(history['date'], history['price'], marker='o')
+        ax.axhline(predicted_price, linestyle='--', label="Predicted Price")
 
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (TZS)")
@@ -225,4 +169,4 @@ if st.sidebar.button("Predict Price"):
         plt.close(fig)
 
     else:
-        st.warning("No historical data available for selected filters.")
+        st.warning("No historical data found for selected filters.")
