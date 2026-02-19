@@ -25,8 +25,12 @@ st.markdown(
 
 
 # Background Image
-# Use Path to find the correct folder
-BASE_DIR = Path(_file_).parent
+## Determine the base directory safely
+try:
+    BASE_DIR = Path(__file__).parent
+except NameError:
+    # Fallback if __file__ doesn't exist (e.g., in notebooks)
+    BASE_DIR = Path(os.getcwd())
 
 # Background Image Function
 def set_bg(image_file):
@@ -53,7 +57,7 @@ def set_bg(image_file):
             .stSelectbox label, .stSlider label {{
                 color: black !important;
                 font-weight: 600;
-                background-color: rgba(255, 255, 255, 0.4); /* Subtle white glow behind text */
+                background-color: rgba(255, 255, 255, 0.4); /* subtle white glow behind text */
                 padding: 2px;
                 border-radius: 4px;
             }}
@@ -62,10 +66,9 @@ def set_bg(image_file):
             unsafe_allow_html=True
         )
     else:
-        # This will tell you exactly where the app is looking if it fails
         st.warning(f"Background image not found at: {image_path}")
 
-# Call the function
+# Call the function with your image
 set_bg("back.jfif")
 
 # Load trained model and scaler
@@ -198,6 +201,7 @@ if st.sidebar.button("Predict Price"):
         st.pyplot(fig)
     else:
         st.warning("No historical data available for trend chart.")
+
 
 
 
