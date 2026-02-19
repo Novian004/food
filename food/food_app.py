@@ -75,17 +75,24 @@ def set_bg(image_file):
 set_bg("back.jfif")
 
 # Load trained model and scaler
-with open('finalized_model.sav', 'rb') as f:
+# 1. Define the folder where your files actually live
+BASE_DIR = Path(_file_).parent 
+
+# 2. Load trained model using the full path
+# Note: I renamed 'model' to 'loaded_model' to match your prediction button code
+with open(BASE_DIR / "finalized_model.sav", "rb") as f:
     loaded_model = pickle.load(f)
 
-with open('scaler.sav', 'rb') as f:
+# 3. Load scaler using the full path
+with open(BASE_DIR / "scaler.sav", "rb") as f:
     sc = pickle.load(f)
 
-with open('model_columns.pkl', 'rb') as f:
+# 4. Load model columns using the full path
+with open(BASE_DIR / "model_columns.pkl", "rb") as f:
     X_columns = pickle.load(f)
 
-# Load dataset to get unique values for dropdowns
-food = pd.read_csv("C:/Users/Admin/Desktop/machine learning/food/Export.csv", on_bad_lines="skip")
+# 5. Load dataset using the full path
+food = pd.read_csv(BASE_DIR / "Export.csv", on_bad_lines="skip")
 
 
 # Convert date to datetime for processing
@@ -197,3 +204,4 @@ if st.sidebar.button("Predict Price"):
         st.pyplot(fig)
     else:
         st.warning("No historical data available for trend chart.")
+
