@@ -85,7 +85,8 @@ with open('model_columns.pkl', 'rb') as f:
     X_columns = pickle.load(f)
 
 # Load dataset to get unique values for dropdowns
-food = pd.read_csv("C:/Users/Admin/Desktop/machine learning/food/Export.csv", on_bad_lines="skip")
+food = pd.read_csv("Export.csv", on_bad_lines="skip")
+
 
 
 # Convert date to datetime for processing
@@ -197,3 +198,4 @@ if st.sidebar.button("Predict Price"):
         st.pyplot(fig)
     else:
         st.warning("No historical data available for trend chart.")
+
